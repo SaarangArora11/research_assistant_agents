@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SynapseResearch — Multi-Agent Deep Research Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Markdown parser and sanitizer from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="theme-dark">
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>Synapse</h2>
+          <span>Research Agents</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="tab-new" id="nav-btn-new">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          New Research
+        </button>
+        <button class="nav-item" data-tab="tab-run" id="nav-btn-run">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Active Run
+          <span class="badge-dot hidden" id="active-run-indicator"></span>
+        </button>
+        <button class="nav-item" data-tab="tab-report" id="nav-btn-report">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Report & Review
+        </button>
+        <button class="nav-item" data-tab="tab-local" id="nav-btn-local">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          Local Models
+        </button>
+        <button class="nav-item" data-tab="tab-settings" id="nav-btn-settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+        <button class="nav-item" data-tab="tab-history" id="nav-btn-history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          History
+        </button>
+      </nav>
+
+      <!-- Active Provider Pill in Sidebar footer -->
+      <div class="sidebar-footer">
+        <div class="provider-status-card" id="provider-status-badge">
+          <div class="status-indicator online"></div>
+          <div class="status-info">
+            <span class="provider-name" id="sidebar-provider-name">OpenRouter</span>
+            <span class="provider-model" id="sidebar-provider-model">llama-3.3-70b</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top header -->
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="topbar-heading">Initiate Research</h1>
+          <p id="topbar-subheading">Collaborative agents with web grounding and iterative checkpoints</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="hardware-pill" id="hw-pill" title="System Hardware Info">
+            <span class="hw-icon">⚡</span>
+            <span id="hw-ram-text">RAM: -- GB</span>
+            <span class="hw-separator">|</span>
+            <span id="hw-gpu-text">GPU: Detecting...</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- TAB 1: NEW RESEARCH -->
+      <section class="tab-pane active" id="tab-new">
+        <div class="form-container">
+          <div class="card glass-card hero-prompt-card">
+            <label for="input-topic" class="form-label">Research Topic or Question</label>
+            <div class="textarea-wrapper">
+              <textarea id="input-topic" rows="3" placeholder="e.g. Next-generation solid-state battery breakthroughs in 2026: cathode chemistry, commercial scalability, and current automotive adoption timelines..."></textarea>
+            </div>
+
+            <div class="extra-instructions-toggle">
+              <button class="text-button" id="toggle-extra-btn" type="button">
+                <span>+ Add specific instructions, focus areas, or constraints</span>
+              </button>
+              <div class="textarea-wrapper hidden" id="extra-wrapper">
+                <textarea id="input-extra" rows="2" placeholder="e.g. Emphasize European and Asian manufacturing; exclude lithium-ion baseline history; include specific cost-per-kWh benchmarks."></textarea>
+              </div>
+            </div>
+
+            <div class="config-grid">
+              <div class="config-item">
+                <label class="form-label">Research Depth</label>
+                <div class="segmented-control" id="depth-selector">
+                  <button type="button" class="segment-btn" data-value="quick">Quick (3 sub-topics)</button>
+                  <button type="button" class="segment-btn active" data-value="standard">Standard (5 sub-topics)</button>
+                  <button type="button" class="segment-btn" data-value="deep">Deep (7 sub-topics)</button>
+                </div>
+              </div>
+
+              <div class="config-item">
+                <label class="form-label">Checkpoints & Steering</label>
+                <div class="segmented-control" id="checkpoint-selector">
+                  <button type="button" class="segment-btn active" data-value="all" title="Stops at Plan, Sections, and Draft">All Stops (Recommended)</button>
+                  <button type="button" class="segment-btn" data-value="plan_only" title="Stops at Plan review only">Plan Only</button>
+                  <button type="button" class="segment-btn" data-value="autopilot" title="Runs completely autonomously">Autopilot</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="footer-note">
+                <span>🌐 All agents will search live web backends with automatic fallbacks</span>
+              </div>
+              <button class="btn btn-primary btn-glow" id="btn-start-research" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Launch Research Agents
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ACTIVE RUN & CHECKPOINTS -->
+      <section class="tab-pane" id="tab-run">
+        <div class="run-view-container">
+          <!-- Stage Progress Bar -->
+          <div class="card glass-card stage-tracker-card">
+            <div class="stage-steps">
+              <div class="step-item" id="step-planning">
+                <div class="step-icon">1</div>
+                <div class="step-label">Scoping & Plan</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" id="step-cp1">
+                <div class="step-icon">🛑</div>
+                <div class="step-label">Plan Review</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" id="step-researching">
+                <div class="step-icon">2</div>
+                <div class="step-label">Subagents Research</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" id="step-cp2">
+                <div class="step-icon">🛑</div>
+                <div class="step-label">Sections Review</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" id="step-synthesizing">
+                <div class="step-icon">3</div>
+                <div class="step-label">Synthesis & Review</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" id="step-cp3">
+                <div class="step-icon">🛑</div>
+                <div class="step-label">Draft Review</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step-item" id="step-done">
+                <div class="step-icon">✓</div>
+                <div class="step-label">Final Report</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Checkpoint Banner / Action Card -->
+          <div class="card checkpoint-card hidden" id="checkpoint-action-card">
+            <div class="checkpoint-header">
+              <div class="cp-title-wrap">
+                <span class="checkpoint-badge">Human-in-the-Loop Checkpoint</span>
+                <h3 id="cp-headline">Review Stage</h3>
+              </div>
+              <p id="cp-description">Please examine the findings and steer the agents.</p>
+            </div>
+
+            <!-- Dynamic Checkpoint Payload View -->
+            <div class="checkpoint-content-box" id="cp-content-box">
+              <!-- Injected by JavaScript based on checkpoint stage -->
+            </div>
+
+            <!-- Checkpoint Action Controls -->
+            <div class="checkpoint-actions-bar">
+              <div class="feedback-input-wrap">
+                <input type="text" id="cp-feedback-input" placeholder="Provide steering instructions or corrections for the agents (e.g. 'Focus more on X, drop Y')...">
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-secondary" id="cp-btn-feedback" type="button">Send Feedback & Redo</button>
+                <button class="btn btn-primary" id="cp-btn-approve" type="button">✓ Approve & Proceed</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent Grid & Live Console Split -->
+          <div class="run-split-grid">
+            <div class="agents-panel">
+              <div class="section-heading-bar">
+                <h3>Active Agent Squad</h3>
+                <span class="badge" id="agent-count-badge">0 Agents</span>
+              </div>
+              <div class="agent-cards-container" id="agent-cards-list">
+                <div class="empty-state-card">Agents will appear once research starts...</div>
+              </div>
+            </div>
+
+            <div class="console-panel">
+              <div class="section-heading-bar">
+                <h3>Live Execution Log</h3>
+                <div class="console-controls">
+                  <button class="btn btn-sm btn-outline" id="btn-cancel-run" type="button">Cancel Run</button>
+                </div>
+              </div>
+              <div class="console-log" id="console-log-stream">
+                <div class="log-entry system">Ready. Start a new research task to observe live execution.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: REPORT & ANNOTATION REVIEW -->
+      <section class="tab-pane" id="tab-report">
+        <div class="report-layout">
+          <div class="report-main-col">
+            <!-- Report Controls Toolbar -->
+            <div class="report-toolbar card glass-card">
+              <div class="toolbar-left">
+                <span class="version-label">Version:</span>
+                <select id="report-version-select" class="form-select">
+                  <option value="1">v1 (Initial Report)</option>
+                </select>
+                <span class="source-count-pill" id="report-sources-count">0 Sources Cited</span>
+              </div>
+              <div class="toolbar-right">
+                <button class="btn btn-sm btn-outline" id="btn-export-md">Export Markdown</button>
+                <button class="btn btn-sm btn-outline" id="btn-export-html">Export HTML</button>
+                <button class="btn btn-sm btn-outline" id="btn-copy-report">Copy Text</button>
+              </div>
+            </div>
+
+            <!-- Floating Text Selection Popover for Annotations -->
+            <div class="selection-popover hidden" id="selection-popover">
+              <button class="popover-btn" id="popover-btn-comment">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Comment & Steer
+              </button>
+            </div>
+
+            <!-- Rendered Markdown Container -->
+            <div class="report-paper card glass-card">
+              <article class="markdown-body" id="report-content-body">
+                <div class="empty-state-card">
+                  <h3>No report loaded yet</h3>
+                  <p>Launch a research task from the "New Research" tab, or load a completed run from "History".</p>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <!-- Slide-out Annotations & Source Inspection Drawer -->
+          <div class="report-side-drawer card glass-card">
+            <!-- Feedback Revision Trigger Banner -->
+            <div class="revision-trigger-box">
+              <div class="revision-info">
+                <h4 id="annotation-count-title">In-App Feedback (0)</h4>
+                <p>Highlight text in the report to add comments, fact-checks, or research requests.</p>
+              </div>
+              <button class="btn btn-primary btn-block btn-sm" id="btn-submit-feedback" disabled>
+                🚀 Generate Revised Report
+              </button>
+            </div>
+
+            <div class="drawer-tabs">
+              <button class="drawer-tab-btn active" id="btn-drawer-comments">Comments</button>
+              <button class="drawer-tab-btn" id="btn-drawer-sources">Sources</button>
+            </div>
+
+            <div class="drawer-tab-content active" id="drawer-comments-pane">
+              <div class="annotations-list" id="annotations-list-items">
+                <p class="empty-hint">Highlight any passage in the report to leave a comment or request deeper research.</p>
+              </div>
+            </div>
+
+            <div class="drawer-tab-content" id="drawer-sources-pane">
+              <div class="sources-list" id="report-sources-list">
+                <p class="empty-hint">Sources cited as [S1], [S2] will be listed here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: LOCAL MODELS & LLAMA-SERVER -->
+      <section class="tab-pane" id="tab-local">
+        <div class="local-models-container">
+          <!-- Server Status Card -->
+          <div class="card glass-card server-status-box">
+            <div class="server-status-header">
+              <div class="status-left">
+                <div class="status-pulse-badge" id="llama-server-pulse"></div>
+                <div>
+                  <h3>llama.cpp Server</h3>
+                  <p id="llama-server-url-text">http://127.0.0.1:8080/v1 (Not running)</p>
+                </div>
+              </div>
+              <div class="server-controls">
+                <button class="btn btn-sm btn-outline" id="btn-server-stop" disabled>Stop Server</button>
+              </div>
+            </div>
+
+            <!-- Detected Binary Banner -->
+            <div class="binary-info-banner" id="binary-info-banner">
+              <span class="icon">🔍</span>
+              <span id="binary-path-text">Scanning for llama-server...</span>
+            </div>
+          </div>
+
+          <!-- Granted Folders Manager -->
+          <div class="card glass-card folder-manager-box">
+            <div class="card-header-bar">
+              <div>
+                <h3>Granted Model Directories</h3>
+                <p>Select local folders containing your GGUF, Hugging Face, or Unsloth models</p>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-add-folder-picker">
+                + Browse & Add Folder
+              </button>
+            </div>
+
+            <!-- Suggested Common Folders Quick-Add -->
+            <div class="suggested-folders-bar" id="suggested-folders-bar">
+              <span class="quick-add-label">Quick Add Detected Caches:</span>
+              <div class="quick-add-chips" id="suggested-chips-container"></div>
+            </div>
+
+            <!-- Current Folders List -->
+            <div class="granted-folders-list" id="granted-folders-list">
+              <p class="empty-hint">No directories granted yet. Click "Browse & Add Folder" or choose a detected cache above.</p>
+            </div>
+          </div>
+
+          <!-- Discovered Models Table -->
+          <div class="card glass-card models-table-box">
+            <div class="card-header-bar">
+              <div>
+                <h3>Discovered Models</h3>
+                <p>All scanned weights with architecture and hardware fit recommendations</p>
+              </div>
+              <button class="btn btn-sm btn-outline" id="btn-rescan-models">↻ Rescan Folders</button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="models-table">
+                <thead>
+                  <tr>
+                    <th>Model Name</th>
+                    <th>Format</th>
+                    <th>Size</th>
+                    <th>Architecture</th>
+                    <th>Quantization</th>
+                    <th>Hardware Fit</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="models-table-body">
+                  <tr>
+                    <td colspan="7" class="empty-table-cell">No models found in granted directories. Add folders above.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Live Server Logs Console -->
+          <div class="card glass-card server-logs-box">
+            <div class="card-header-bar">
+              <h4>llama-server Console Output</h4>
+            </div>
+            <div class="server-log-stream" id="server-log-stream">
+              <div class="log-entry">Server logs will stream here when launched...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: SETTINGS -->
+      <section class="tab-pane" id="tab-settings">
+        <div class="settings-container">
+          <!-- Provider Selection Card -->
+          <div class="card glass-card">
+            <div class="card-header-bar">
+              <div>
+                <h3>LLM Provider</h3>
+                <p>Switch between cloud OpenRouter or local llama.cpp</p>
+              </div>
+              <button class="btn btn-sm btn-primary" id="btn-test-provider">Test Connection</button>
+            </div>
+
+            <div class="provider-radio-group">
+              <label class="provider-radio-label">
+                <input type="radio" name="provider-choice" value="openrouter" id="provider-choice-openrouter">
+                <div class="radio-card">
+                  <span class="radio-title">OpenRouter API</span>
+                  <span class="radio-desc">Access frontier models (Claude, Llama 3.3, DeepSeek, etc.) via API key</span>
+                </div>
+              </label>
+              <label class="provider-radio-label">
+                <input type="radio" name="provider-choice" value="llamacpp" id="provider-choice-llamacpp">
+                <div class="radio-card">
+                  <span class="radio-title">Local llama.cpp Server</span>
+                  <span class="radio-desc">Run fully private, local GGUF models on your GPU/CPU</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- OpenRouter Config Fields -->
+            <div class="provider-fields" id="fields-openrouter">
+              <div class="form-group">
+                <label class="form-label" for="setting-openrouter-key">OpenRouter API Key</label>
+                <div class="input-with-action">
+                  <input type="password" id="setting-openrouter-key" placeholder="sk-or-v1-...">
+                  <button type="button" class="btn btn-sm btn-outline" id="btn-toggle-key-visibility">Show</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-openrouter-model">Default Model</label>
+                <input type="text" id="setting-openrouter-model" placeholder="meta-llama/llama-3.3-70b-instruct">
+              </div>
+            </div>
+
+            <!-- llama.cpp Config Fields -->
+            <div class="provider-fields hidden" id="fields-llamacpp">
+              <div class="form-group">
+                <label class="form-label" for="setting-llamacpp-url">llama.cpp Base URL</label>
+                <input type="text" id="setting-llamacpp-url" placeholder="http://127.0.0.1:8080/v1">
+              </div>
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label" for="setting-llamacpp-ctx">Context Length (-c)</label>
+                  <input type="number" id="setting-llamacpp-ctx" value="8192">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setting-llamacpp-ngl">GPU Layers (-ngl)</label>
+                  <input type="number" id="setting-llamacpp-ngl" value="99">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setting-llamacpp-parallel">Parallel Slots</label>
+                  <input type="number" id="setting-llamacpp-parallel" value="2">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Web Search Backends Card -->
+          <div class="card glass-card">
+            <div class="card-header-bar">
+              <div>
+                <h3>Web Search Backends & Fallback Priority</h3>
+                <p>When searching, backends are tried in this order with automatic error fallbacks</p>
+              </div>
+              <button class="btn btn-sm btn-outline" id="btn-test-search">Test Search</button>
+            </div>
+
+            <div class="search-backends-settings">
+              <div class="form-group">
+                <label class="form-label">Priority Order (comma-separated):</label>
+                <input type="text" id="setting-search-order" value="ddg, searxng, brave, tavily, serper, exa, wikipedia, arxiv, semantic_scholar">
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="setting-brave-key">Brave Search API Key</label>
+                  <input type="password" id="setting-brave-key" placeholder="Optional (for high quality web results)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setting-tavily-key">Tavily API Key</label>
+                  <input type="password" id="setting-tavily-key" placeholder="Optional (LLM search API)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setting-serper-key">Serper (Google) Key</label>
+                  <input type="password" id="setting-serper-key" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="setting-searxng-url">SearXNG Instance URL</label>
+                  <input type="text" id="setting-searxng-url" placeholder="e.g. http://localhost:8080 (optional)">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Settings -->
+          <div class="card glass-card">
+            <h3>Pipeline Controls</h3>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="setting-concurrency">Max Researcher Concurrency</label>
+                <input type="number" id="setting-concurrency" value="2" min="1" max="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-max-reviews">Max Review Rounds</label>
+                <input type="number" id="setting-max-reviews" value="2" min="1" max="5">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-sources-per-sec">Sources Per Section</label>
+                <input type="number" id="setting-sources-per-sec" value="6" min="2" max="15">
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-primary" id="btn-save-settings">Save All Settings</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: HISTORY -->
+      <section class="tab-pane" id="tab-history">
+        <div class="history-container">
+          <div class="section-heading-bar">
+            <h3>Previous Research Runs</h3>
+            <button class="btn btn-sm btn-outline" id="btn-refresh-history">↻ Refresh</button>
+          </div>
+          <div class="history-cards-grid" id="history-runs-grid">
+            <div class="empty-state-card">No historical runs recorded yet.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Annotation Comment Modal Dialog -->
+  <div class="modal-backdrop hidden" id="annotation-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Feedback Annotation</h3>
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="selected-quote-preview" id="modal-quote-preview">
+          "Highlighted text quote..."
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intent / Goal</label>
+          <div class="intent-chips-selector" id="modal-intent-chips">
+            <button type="button" class="intent-chip active" data-intent="auto">🤖 Auto</button>
+            <button type="button" class="intent-chip" data-intent="research_more">🔍 Research More</button>
+            <button type="button" class="intent-chip" data-intent="fact_check">⚖️ Fact Check</button>
+            <button type="button" class="intent-chip" data-intent="rewrite">✍️ Rewrite</button>
+            <button type="button" class="intent-chip" data-intent="expand">➕ Expand</button>
+            <button type="button" class="intent-chip" data-intent="remove">❌ Remove</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modal-comment-input">Your Specific Instructions</label>
+          <textarea id="modal-comment-input" rows="3" placeholder="e.g. Find recent empirical data on this claim; or clarify how this compares to competing methods..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="modal-save-btn">Save Annotation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Source Detail Modal / Drawer -->
+  <div class="modal-backdrop hidden" id="source-detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="source-modal-title">Source Detail</h3>
+        <button class="modal-close-btn" id="source-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="source-modal-meta">
+          <span class="badge" id="source-modal-id">S1</span>
+          <span class="badge" id="source-modal-backend">ddg</span>
+          <a href="#" target="_blank" rel="noopener" id="source-modal-link" class="source-external-link">Visit URL ↗</a>
+        </div>
+        <div class="source-modal-snippet" id="source-modal-snippet"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+[project]
+name = "research-assistant-agents"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "duckduckgo-search>=8.1.1",
+    "fastapi>=0.162.0",
+    "gguf>=0.19.0",
+    "httpx>=0.28.1",
+    "openai>=3.38.0",
+    "psutil>=7.2.2",
+    "pydantic>=2.14.1",
+    "pypdf>=6.21.2",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.1",
+    "python-dotenv>=1.2.4",
+    "sse-starlette>=3.6.0",
+    "trafilatura>=2.3.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+asyncio_mode = "auto"
